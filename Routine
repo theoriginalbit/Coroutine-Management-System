@@ -1,6 +1,6 @@
 --[[
 Author: TheOriginalBIT
-Version: 1.2
+Version: 1.2.1
 Created: 15 June 2013
 Last Update: 19 June 2013
 
@@ -27,17 +27,8 @@ ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEAL
 
 local _ROUTINES = {}
 local _CURRENTROUTINE = nil
-local _LASTID = 0
+local _NEXTID = 0
 local _PRIORITYQUEUE = {}
-
-local function niceError( _err )
-  term.clear()
-  term.setCursorPos(1, 1)
-  term.setCursorBlink(false)
-  print( tostring(_err).."\nPress any key to shutdown" )
-  os.pullEvent("key")
-  error()
-end
 
 local function safePairs( _t )
   local tKeys = {}
@@ -52,8 +43,8 @@ local function safePairs( _t )
 end
 
 local function nextId()
-  local temp = _LASTID
-  _LASTID = _LASTID + 1
+  local temp = _NEXTID
+  _NEXTID = _NEXTID + 1
   return temp
 end
 
@@ -73,7 +64,7 @@ end
 local function create( _name, _func, _callback )
   if type(_func) == "function" then
     local id = nextId()
-    _ROUTINES[id] = { id = id, name = _name, callback = _callback, thread = coroutine.create(_func) }
+    _ROUTINES[id] = { id = id, name = _name, isPaused = false, callback = _callback, thread = coroutine.create(_func) }
     return id
   end
 
@@ -83,7 +74,7 @@ end
 local function resume( co, ... )
   local ok, param = coroutine.resume( co.thread, ... )
   if not ok then
-    niceError( param )
+    error( param )
   end
   if status( co.thread ) == "dead" then
     _ROUTINES[ co.id ] = nil
@@ -157,9 +148,45 @@ function stopRoutine( _id )
   return stop( _id )
 end
 
+function pauseRoutine( _id )
+  local co = _ROUTINES[_id]
+
+  if not co then
+    error( "Invalid routine id.", 2 )
+  elseif status( co ) == "dead" then
+    error( "Routine is dead.", 2 )
+  end
+
+  co.isPaused = true
+end
+
+function resumeRoutine( _id )
+  local co = _ROUTINES[_id]
+
+  if not co then
+    error( "Invalid routine id.", 2 )
+  elseif status( co ) == "dead" then
+    error( "Routine is dead.", 2 )
+  end
+
+  co.isPaused = false
+end
+
 function getRoutine( _id )
   local co = _ROUTINES[ _id or _CURRENTROUTINE ]
   return (co and co.thread or nil)
+end
+
+function isRoutinePaused( _id )
+  local co = _ROUTINES[_id]
+
+  if not co then
+    error( "Invalid routine id.", 2 )
+  elseif status( co ) == "dead" then
+    error( "Routine is dead.", 2 )
+  end
+
+  return co.isPaused
 end
 
 function runRoutines()
@@ -167,16 +194,21 @@ function runRoutines()
 
   while true do
     for id, routine in safePairs( _ROUTINES ) do
-      if not (eventData[1]:find("targeted_event_")) or eventData[1] == "targeted_event_"..routine.id then
+      if not routine.isPaused then
         _CURRENTROUTINE = id
-        table.remove( eventData, 1 )
-        resume( routine, unpack(eventData) )
-        break
+        if not (eventData[1]:find("targeted_event_")) then
+          resume( routine, unpack(eventData) )
+        elseif eventData[1] == "targeted_event_"..routine.id then
+          table.remove( eventData, 1 )
+          resume( routine, unpack(eventData) )
+          break
+        end
       end
     end
     while _PRIORITYQUEUE[1] do
       local evt = _PRIORITYQUEUE[1]
       _CURRENTROUTINE = evt.id
+      if _ROUTINES[evt.id].isPaused then break end
       resume( _ROUTINES[evt.id], unpack(evt.data) )
       table.remove( _PRIORITYQUEUE, 1 )
     end
