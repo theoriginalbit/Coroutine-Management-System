@@ -1,6 +1,6 @@
 --[[
 Author: TheOriginalBIT
-Version: 1.1
+Version: 1.2
 Created: 15 June 2013
 Last Update: 19 June 2013
 
@@ -57,6 +57,19 @@ local function nextId()
   return temp
 end
 
+local function status( _id )
+  if type(_id) == "thread" then
+    return coroutine.status(_id)
+  elseif type(_id) == "number" then
+    local co = _ROUTINES[_id]
+    if not co then
+      error( "Invalid routine id.", 3 )
+    end
+    return coroutine.status( co )
+  end
+  error( "Invalid argument #1: Expected routine or number, got "..type(_id), 3 )
+end
+
 local function create( _name, _func, _callback )
   if type(_func) == "function" then
     local id = nextId()
@@ -72,7 +85,7 @@ local function resume( co, ... )
   if not ok then
     niceError( param )
   end
-  if coroutine.status( co.thread ) == "dead" then
+  if status( co.thread ) == "dead" then
     _ROUTINES[ co.id ] = nil
     _CURRENTROUTINE = nil
   end
@@ -80,7 +93,7 @@ local function resume( co, ... )
 end
 
 local function kill( _id )
-  if _ROUTINES[_id] and coroutine.status(_ROUTINES[_id]) ~= "dead" then
+  if _ROUTINES[_id] and status( _ROUTINES[_id]) ~= "dead" then
     _ROUTINES[_id] = nil
     return true
   end
@@ -89,11 +102,14 @@ end
 
 local function stop( _id )
   local co = _ROUTINES[_id]
-  if co and coroutine.status( co ) ~= "dead" then
+  if co and status( co ) ~= "dead" then
     if co._callback then
       co._callback()
     else
       resume( co, "SIG_KILL" )
+    end
+    if status( co ) == "dead" then
+      return true
     end
     return kill( _id )
   end
@@ -105,7 +121,7 @@ function queueTargetedEvent( _id, ... )
 
   if not co then
     error( "Invalid routine id.", 2 )
-  elseif coroutine.status( co ) == "dead" then
+  elseif status( co ) == "dead" then
     error( "Routine is dead.", 2 )
   end
   
@@ -118,7 +134,7 @@ function queuePriorityTargetedEvent( _id, ... )
 
   if not co then
     error( "Invalid routine id.", 2 )
-  elseif coroutine.status( co ) == "dead" then
+  elseif status( co ) == "dead" then
     error( "Routine is dead.", 2 )
   end
 
@@ -127,6 +143,10 @@ end
 
 function newRoutine( _name, _func, _callback )
   return create( _name, _func, _callback )
+end
+
+function statusRoutine( _id )
+  return status( _id )
 end
 
 function killRoutine( _id )
