@@ -147,7 +147,7 @@ function runRoutines()
 
   while true do
     for id, routine in safePairs( _ROUTINES ) do
-      if eventData[1] == "targeted_event_"..routine.id or not (eventData[1]:find("targeted_event_")) then
+      if not (eventData[1]:find("targeted_event_")) or eventData[1] == "targeted_event_"..routine.id then
         _CURRENTROUTINE = id
         table.remove( eventData, 1 )
         resume( routine, unpack(eventData) )
