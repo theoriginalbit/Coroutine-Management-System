@@ -1,6 +1,6 @@
 --[[
 Author: TheOriginalBIT
-Version: 1.0
+Version: 1.1
 Created: 15 June 2013
 Last Update: 19 June 2013
 
@@ -113,7 +113,7 @@ function queueTargetedEvent( _id, ... )
   return true
 end
 
-function queuePriorityTargetdEvent( _id, ... )
+function queuePriorityTargetedEvent( _id, ... )
   local co = _ROUTINES[_id]
 
   if not co then
