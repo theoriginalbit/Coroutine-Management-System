@@ -2,7 +2,7 @@
 Author: TheOriginalBIT
 Version: 1.0
 Created: 15 June 2013
-Last Update: 17 June 2013
+Last Update: 19 June 2013
 
 License:
 
@@ -28,6 +28,7 @@ ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEAL
 local _ROUTINES = {}
 local _CURRENTROUTINE = nil
 local _LASTID = 0
+local _PRIORITYQUEUE = {}
 
 local function niceError( _err )
   term.clear()
@@ -101,11 +102,27 @@ end
 
 function queueTargetedEvent( _id, ... )
   local co = _ROUTINES[_id]
-  if co and coroutine.status( co ) ~= "dead" then
-    os.queueEvent( "targeted_event_".._id, ... )
-    return true
+
+  if not co then
+    error( "Invalid routine id.", 2 )
+  elseif coroutine.status( co ) == "dead" then
+    error( "Routine is dead.", 2 )
   end
-  return false
+  
+  os.queueEvent( "targeted_event_".._id, ... )
+  return true
+end
+
+function queuePriorityTargetdEvent( _id, ... )
+  local co = _ROUTINES[_id]
+
+  if not co then
+    error( "Invalid routine id.", 2 )
+  elseif coroutine.status( co ) == "dead" then
+    error( "Routine is dead.", 2 )
+  end
+
+  table.insert( _PRIORITYQUEUE, {id = _id, data = {...}} )
 end
 
 function newRoutine( _name, _func, _callback )
@@ -130,12 +147,18 @@ function runRoutines()
 
   while true do
     for id, routine in safePairs( _ROUTINES ) do
-      if eventData[1] == "targeted_event_"..routine.id then
+      if eventData[1] == "targeted_event_"..routine.id or not (eventData[1]:find("targeted_event_")) then
         _CURRENTROUTINE = id
         table.remove( eventData, 1 )
         resume( routine, unpack(eventData) )
         break
       end
+    end
+    while _PRIORITYQUEUE[1] do
+      local evt = _PRIORITYQUEUE[1]
+      _CURRENTROUTINE = evt.id
+      resume( _ROUTINES[evt.id], unpack(evt.data) )
+      table.remove( _PRIORITYQUEUE, 1 )
     end
     eventData = { os.pullEventRaw() }
   end
