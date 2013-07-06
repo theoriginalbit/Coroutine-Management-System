@@ -1,0 +1,150 @@
+os.loadAPI("routine")
+
+local oneId
+local twoId
+local threeId
+local fourId
+
+term.clear()
+
+local function one()
+  local second = 0
+  local time = os.startTimer(1)
+
+  while true do
+    term.setCursorPos(1,1)
+    term.clearLine()
+    term.setCursorPos(1,1)
+    print("One has been running for "..second.." seconds")
+
+    if second == 5 and routine.routineStatus( oneId ) ~= "dead" then
+      term.setCursorPos(1, 6)
+      print("killing three")
+      routine.killRoutine( threeId ) --# this will not invoke the callback
+    end
+    
+    if second == 7 and routine.routineStatus( twoId ) ~= "dead" then
+      routine.pauseRoutine( twoId )
+      term.setCursorPos(1, 7)
+      print("pausing two ... two status: "..routine.routineStatus( twoId ))
+    end
+
+    if second == 9 and routine.routineStatus( twoId ) ~= "dead" then
+      routine.resumeRoutine( twoId )
+      term.setCursorPos(1, 8)
+      print("resuming two ... two status: "..routine.routineStatus( twoId ))
+    end
+
+    if second == 11 and routine.routineStatus( twoId ) ~= "dead" then
+      term.setCursorPos(1, 9)
+      print("stopping two with callback")
+      routine.stopRoutine( twoId ) --# this will invoke the callback
+    end
+
+    if second == 13 and routine.routineStatus( fourId ) ~= "dead" then
+      term.setCursorPos(1, 10)
+      print("stopping four with SIG_KILL")
+      routine.stopRoutine( fourId ) --# this will invoke the callback
+    end
+
+    if second == 15 then
+      term.setCursorPos(1, 11)
+      print("ending self")
+      break
+    end
+
+    local e = { os.pullEvent("timer") } --# can use pull event like normal
+    
+    if e[1] == "timer" and e[2] == time then
+      time = os.startTimer(1)
+      second = second + 1
+    end
+  end
+end
+
+local function two()
+  local sec = 0
+  local time = os.startTimer(1)
+
+  while true do
+    term.setCursorPos(1,2)
+    term.clearLine()
+    term.setCursorPos(1,2)
+    print("Two has been running for "..sec.." seconds")
+
+    local e = { os.pullEventRaw() }
+    
+    if e[1] == "timer" and e[2] == time then
+      time = os.startTimer(1)
+      sec = sec + 1
+    end
+  end
+end
+
+local function twoCallback()
+  term.setCursorPos(1,2)
+  term.clearLine()
+  term.setCursorPos(1,2)
+  print("Two is dead")
+end
+
+local function three()
+  local sec = 0
+  local time = os.startTimer(1)
+
+  while true do
+    term.setCursorPos(1,3)
+    term.clearLine()
+    term.setCursorPos(1,3)
+    print("Three has been running for "..sec.." seconds")
+
+    local e = { coroutine.yield() } --# we can even just go top level yielding
+    
+    if e[1] == "timer" and e[2] == time then
+      time = os.startTimer(1)
+      sec = sec + 1
+    end
+  end
+end
+
+local function threeCallback()
+  term.setCursorPos(1,3)
+  term.clearLine()
+  term.setCursorPos(1,3)
+  print("Three is dead")
+end
+
+local function four()
+  local sec = 0
+  local time = os.startTimer(1)
+
+  while true do
+    term.setCursorPos(1,4)
+    term.clearLine()
+    term.setCursorPos(1,4)
+    print("Four has been running for "..sec.." seconds")
+
+    local e = { os.pullEventRaw() }
+    
+    if e[1] == "timer" and e[2] == time then
+      time = os.startTimer(1)
+      sec = sec + 1
+    elseif e[1] == "SIG_KILL" then
+      term.setCursorPos(1,4)
+      term.clearLine()
+      term.setCursorPos(1,4)
+      print("Four has been told it will die :(")
+      --# we could use a return here if we wanted to, and it would stop the routine, or we can let the CMS do it.
+    end
+  end
+end
+
+oneId = routine.newRoutine( "one", one )
+twoId = routine.newRoutine( "two", two, twoCallback )
+threeId = routine.newRoutine( "three", three, threeCallback )
+fourId = routine.newRoutine( "four", four )
+
+routine.runRoutines()
+
+term.setCursorPos(1, 13)
+print("Done...")
