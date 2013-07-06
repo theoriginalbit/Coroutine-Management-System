@@ -1,8 +1,8 @@
 --[[
 Author: TheOriginalBIT
-Version: 1.2.1
+Version: 1.2.2
 Created: 15 June 2013
-Last Update: 19 June 2013
+Last Update: 06 July 2013
 
 License:
 
@@ -136,7 +136,7 @@ function newRoutine( _name, _func, _callback )
   return create( _name, _func, _callback )
 end
 
-function statusRoutine( _id )
+function routineStatus( _id )
   return status( _id )
 end
 
@@ -212,6 +212,6 @@ function runRoutines()
       resume( _ROUTINES[evt.id], unpack(evt.data) )
       table.remove( _PRIORITYQUEUE, 1 )
     end
-    eventData = { os.pullEventRaw() }
+    eventData = { coroutine.yield() }
   end
 end
