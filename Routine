@@ -208,8 +208,9 @@ function runRoutines()
     while _PRIORITYQUEUE[1] do
       local evt = _PRIORITYQUEUE[1]
       _CURRENTROUTINE = evt.id
-      if _ROUTINES[evt.id].isPaused then break end
-      resume( _ROUTINES[evt.id], unpack(evt.data) )
+      if not _ROUTINES[evt.id].isPaused then
+        resume( _ROUTINES[evt.id], unpack(evt.data) )
+      end
       table.remove( _PRIORITYQUEUE, 1 )
     end
     eventData = { coroutine.yield() }

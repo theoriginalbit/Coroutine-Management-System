@@ -17,7 +17,7 @@ local function one()
     term.setCursorPos(1,1)
     print("One has been running for "..second.." seconds")
 
-    if second == 5 and routine.routineStatus( oneId ) ~= "dead" then
+    if second == 5 and routine.routineStatus( threeId ) ~= "dead" then
       term.setCursorPos(1, 6)
       print("killing three")
       routine.killRoutine( threeId ) --# this will not invoke the callback
