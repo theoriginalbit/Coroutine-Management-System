@@ -1,6 +1,6 @@
 --[[
 Author: TheOriginalBIT
-Version: 1.2.2
+Version: 1.2.3
 Created: 15 June 2013
 Last Update: 06 July 2013
 
@@ -56,7 +56,7 @@ local function status( _id )
     if not co then
       error( "Invalid routine id.", 3 )
     end
-    return coroutine.status( co )
+    return coroutine.status( co.thread )
   end
   error( "Invalid argument #1: Expected routine or number, got "..type(_id), 3 )
 end
@@ -84,7 +84,7 @@ local function resume( co, ... )
 end
 
 local function kill( _id )
-  if _ROUTINES[_id] and status( _ROUTINES[_id]) ~= "dead" then
+  if _ROUTINES[_id] and status( _id ) ~= "dead" then
     _ROUTINES[_id] = nil
     return true
   end
@@ -93,13 +93,13 @@ end
 
 local function stop( _id )
   local co = _ROUTINES[_id]
-  if co and status( co ) ~= "dead" then
+  if co and status( co.thread ) ~= "dead" then
     if co._callback then
       co._callback()
     else
       resume( co, "SIG_KILL" )
     end
-    if status( co ) == "dead" then
+    if status( co.thread ) == "dead" then
       return true
     end
     return kill( _id )
@@ -112,7 +112,7 @@ function queueTargetedEvent( _id, ... )
 
   if not co then
     error( "Invalid routine id.", 2 )
-  elseif status( co ) == "dead" then
+  elseif status( co.thread ) == "dead" then
     error( "Routine is dead.", 2 )
   end
   
@@ -125,7 +125,7 @@ function queuePriorityTargetedEvent( _id, ... )
 
   if not co then
     error( "Invalid routine id.", 2 )
-  elseif status( co ) == "dead" then
+  elseif status( co.thread ) == "dead" then
     error( "Routine is dead.", 2 )
   end
 
@@ -153,7 +153,7 @@ function pauseRoutine( _id )
 
   if not co then
     error( "Invalid routine id.", 2 )
-  elseif status( co ) == "dead" then
+  elseif status( co.thread ) == "dead" then
     error( "Routine is dead.", 2 )
   end
 
@@ -165,7 +165,7 @@ function resumeRoutine( _id )
 
   if not co then
     error( "Invalid routine id.", 2 )
-  elseif status( co ) == "dead" then
+  elseif status( co.thread ) == "dead" then
     error( "Routine is dead.", 2 )
   end
 
@@ -182,7 +182,7 @@ function isRoutinePaused( _id )
 
   if not co then
     error( "Invalid routine id.", 2 )
-  elseif status( co ) == "dead" then
+  elseif status( co.thread ) == "dead" then
     error( "Routine is dead.", 2 )
   end
 
@@ -196,7 +196,7 @@ function runRoutines()
     for id, routine in safePairs( _ROUTINES ) do
       if not routine.isPaused then
         _CURRENTROUTINE = id
-        if not (eventData[1]:find("targeted_event_")) then
+        if not eventData[1] or not (eventData[1]:find("targeted_event_")) then
           resume( routine, unpack(eventData) )
         elseif eventData[1] == "targeted_event_"..routine.id then
           table.remove( eventData, 1 )
