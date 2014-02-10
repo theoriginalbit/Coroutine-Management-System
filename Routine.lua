@@ -162,7 +162,7 @@ function run()
   while true do
     for id, routine in safePairs(_ROUTINES) do
       if not routine.isPaused and (not filters[id] or filters[id] == eventData[1] or eventData[1] == "terminate") then
-        local param = resume(resolveIdentifier(id), unpack(eventData))
+        local param = resume(id, unpack(eventData))
         filters[id] = param
       end
     end
