@@ -88,7 +88,7 @@ function routineStatus(id)
   return coroutine.status(resolveIdentifier(id))
 end
 
-function createRoutine(name,func)
+function createCoroutine(name,func)
   if type(name) ~= "string" then
     error("Expected coroutine name", 2)
   end
@@ -104,19 +104,19 @@ function createRoutine(name,func)
   return nil
 end
 
-function stopRoutine(id)
+function stopCoroutine(id)
   local co = _ROUTINES[resolveIdentifier(id)]
   if coroutine.status(co.thread) ~= "dead" then
     resume(co, "SIG_STOP") -- warn of impending stop
     if coroutine.status(co.thread) == "dead" then
       return true
     end
-    return killRoutine(id)
+    return killCoroutine(id)
   end
   return false
 end
 
-function killRoutine(id)
+function killCoroutine(id)
   local co = _ROUTINES[resolveIdentifier(id)]
   if coroutine.status(co.thread) ~= "dead" then
     resume(co, "SIG_KILL") -- warn of impending kill
@@ -127,7 +127,7 @@ function killRoutine(id)
   return false
 end
 
-function pauseRoutine(id)
+function pauseCoroutine(id)
   local co = _ROUTINES[resolveIdentifier(id)]
   if coroutine.status(co.thread) ~= "dead" then
     co.isPaused = true
@@ -136,7 +136,7 @@ function pauseRoutine(id)
   error("Cannot pause a dead coroutine", 2)
 end
 
-function resumeRoutine(id)
+function resumeCoroutine(id)
   local co = _ROUTINES[resolveIdentifier(id)]
   if coroutine.status(co.thread) ~= "dead" then
     co.isPaused = false
@@ -145,12 +145,12 @@ function resumeRoutine(id)
   error("Cannot resume a dead coroutine", 2)
 end
 
-function isRoutinePaused(id)
+function isCoroutinePaused(id)
   local co = _ROUTINES[resolveIdentifier(id)]
   return co.isPaused
 end
 
-function getRoutine(id)
+function getCoroutine(id)
   return _ROUTINES[resolveIdentifier(id)].thread
 end
 
