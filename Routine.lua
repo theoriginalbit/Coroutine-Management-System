@@ -105,7 +105,15 @@ function createRoutine(name,func)
 end
 
 function stopRoutine(id)
-  -- Code here...
+  local co = _ROUTINES[resolveIdentifier(id)]
+  if coroutine.status(co.thread) ~= "dead" then
+    resume(co, "SIG_STOP")
+    if coroutine.status(co.thread) == "dead" then
+      return true
+    end
+    return killRoutine(id)
+  end
+  return false
 end
 
 function killRoutine(id)
