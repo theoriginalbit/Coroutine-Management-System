@@ -69,9 +69,10 @@ local _ROUTINES = {}
 local _NAMETOID = {}
 
 local function resume(co, ...)
+  local ok, param
   if coroutine.status(co.thread) ~= "dead" then
     _CURRENTROUTINEID = co.id
-    local ok, param = coroutine.resume(co.thread, ...)
+    ok, param = coroutine.resume(co.thread, ...)
     if not ok then
       error(param, 3)
     end
@@ -81,7 +82,7 @@ local function resume(co, ...)
     _NAMETOID[co.name] = nil
   end
   _CURRENTROUTINEID = nil
-  return true
+  return param
 end
 
 function routineStatus(id)
@@ -155,5 +156,16 @@ function getCoroutine(id)
 end
 
 function run()
-  -- Code here...
+  local eventData = {}
+  local filters = {}
+
+  while true do
+    for id, routine in safePairs(_ROUTINES) do
+      if not routine.isPaused and (not filters[id] or filters[id] == eventData[1] or eventData[1] == "terminate") then
+        local param = resume(resolveIdentifier(id), unpack(eventData))
+        filters[id] = param
+      end
+    end
+    eventData = {coroutine.yield()}
+  end
 end
