@@ -77,7 +77,19 @@ function routineStatus(id)
 end
 
 function createRoutine(name,func)
-  -- Code here...
+  if type(name) ~= "string" then
+    error("Expected coroutine name", 2)
+  end
+  if type(func) == "function" then
+    func = coroutine.create(func)
+  end
+  if type(func) == "thread" then
+    local id = nextId()
+    _NAMETOID[name] = id
+    _ROUTINES[id] = {id=id; name=name; paused=false; thread=func}
+    return id
+  end
+  return nil
 end
 
 function stopRoutine(id)
