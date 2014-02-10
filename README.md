@@ -15,7 +15,7 @@ Features
 - Queue events that jump the event queue
 - Ability for manual control of coroutine life-cycle
 
-* Events are notification of change in life-cycle only and does not allow you to prevent the change
+\* Events are notification of change in life-cycle only and does not allow you to prevent the change
 
 Author
 ------
