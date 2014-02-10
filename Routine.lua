@@ -141,6 +141,7 @@ function pauseCoroutine(id)
   local co = _ROUTINES[resolveIdentifier(id)]
   if coroutine.status(co.thread) ~= "dead" then
     co.isPaused = true
+    resume(co, "SIG_PAUSE")
     return true
   end
   error("Cannot pause a dead coroutine", 2)
@@ -150,6 +151,7 @@ function resumeCoroutine(id)
   local co = _ROUTINES[resolveIdentifier(id)]
   if coroutine.status(co.thread) ~= "dead" then
     co.isPaused = false
+    resume(co, "SIG_RESUME")
     return true
   end
   error("Cannot resume a dead coroutine", 2)
