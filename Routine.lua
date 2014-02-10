@@ -155,6 +155,12 @@ function getCoroutine(id)
   return _ROUTINES[resolveIdentifier(id)].thread
 end
 
+local _PRIORITYQUEUE = {}
+function queuePriorityEvent(id, ...)
+  local co = resolveIdentifier(id)
+  table.insert(_PRIORITYQUEUE, {id=co.id; data={...}})
+end
+
 function run()
   local eventData = {}
   local filters = {}
@@ -165,6 +171,14 @@ function run()
         local param = resume(id, unpack(eventData))
         filters[id] = param
       end
+    end
+    while _PRIORITYQUEUE[1] do
+      local event = _PRIORITYQUEUE[1]
+      local co = _ROUTINES[event.id]
+      if not co.isPaused then
+        resume(co, unpack(event.data))
+      end
+      table.remove(_PRIORITYQUEUE, 1)
     end
     eventData = {coroutine.yield()}
   end
