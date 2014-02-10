@@ -68,8 +68,20 @@ end
 local _ROUTINES = {}
 local _NAMETOID = {}
 
-local function resume(...)
-  -- Code here...
+local function resume(co, ...)
+  if coroutine.status(co.thread) ~= "dead" then
+    _CURRENTROUTINEID = co.id
+    local ok, param = coroutine.resume(co.thread, ...)
+    if not ok then
+      error(param, 3)
+    end
+  end
+  if coroutine.status(co.thread) == "dead" then
+    _ROUTINES[co.id] = nil
+    _NAMETOID[co.name] = nil
+  end
+  _CURRENTROUTINEID = nil
+  return true
 end
 
 function routineStatus(id)
