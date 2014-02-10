@@ -145,6 +145,15 @@ function resumeRoutine(id)
   error("Cannot resume a dead coroutine", 2)
 end
 
+function isRoutinePaused(id)
+  local co = _ROUTINES[resolveIdentifier(id)]
+  return co.isPaused
+end
+
+function getRoutine(id)
+  return _ROUTINES[resolveIdentifier(id)].thread
+end
+
 function run()
   -- Code here...
 end
