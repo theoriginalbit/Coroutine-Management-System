@@ -107,7 +107,7 @@ end
 function stopRoutine(id)
   local co = _ROUTINES[resolveIdentifier(id)]
   if coroutine.status(co.thread) ~= "dead" then
-    resume(co, "SIG_STOP")
+    resume(co, "SIG_STOP") -- warn of impending stop
     if coroutine.status(co.thread) == "dead" then
       return true
     end
@@ -117,7 +117,14 @@ function stopRoutine(id)
 end
 
 function killRoutine(id)
-  -- Code here...
+  local co = _ROUTINES[resolveIdentifier(id)]
+  if coroutine.status(co.thread) ~= "dead" then
+    resume(co, "SIG_KILL") -- warn of impending kill
+    _ROUTINES[co.id] = nil -- dereference to have the gc clean it up
+    _NAMETOID[co.name] = nil
+    return true
+  end
+  return false
 end
 
 function pauseRoutine(id)
