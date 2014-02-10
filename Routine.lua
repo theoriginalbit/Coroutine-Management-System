@@ -85,7 +85,7 @@ local function resume(co, ...)
 end
 
 function routineStatus(id)
-  -- Code here...
+  return coroutine.status(resolveIdentifier(id))
 end
 
 function createRoutine(name,func)
