@@ -1,7 +1,7 @@
 Coroutine-Management-System
 ---------------------------
 
-A coroutine management system (CMS) written for Lua, targeted towards users of the Minecraft Mod – [ComputerCraft](http://computercraft.info) – as a better replacement for the [Parallel API](http://computercraft.info/wiki/Parallel_(API)).
+A coroutine management system (CMS) written for Lua, targeted towards developers for [ComputerCraft](http://computercraft.info) – a Minecraft mod – as a better replacement for the [Parallel API](http://computercraft.info/wiki/Parallel_(API)).
 
 Features
 --------
