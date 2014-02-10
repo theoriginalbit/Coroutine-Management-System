@@ -155,6 +155,11 @@ function getCoroutine(id)
   return _ROUTINES[resolveIdentifier(id)].thread
 end
 
+function queueTargetedEvent(id, ...)
+  local co = resolveIdentifier(id)
+  os.queueEvent("targeted_event", co.id, ...)
+end
+
 local _PRIORITYQUEUE = {}
 function queuePriorityEvent(id, ...)
   local co = resolveIdentifier(id)
@@ -167,9 +172,15 @@ function run()
 
   while true do
     for id, routine in safePairs(_ROUTINES) do
-      if not routine.isPaused and (not filters[id] or filters[id] == eventData[1] or eventData[1] == "terminate") then
-        local param = resume(id, unpack(eventData))
-        filters[id] = param
+      if not routine.isPaused then
+        if eventData[1] == "targeted_event" and eventData[2] == id then
+          table.remove(eventData, 1) -- remove targeted_event
+          table.remove(eventData, 1) -- remove targeted id
+          filters[id] = resume(id, unpack(eventData))
+          break
+        elseif not filters[id] or filters[id] == eventData[1] or eventData[1] == "terminate" then
+          filters[id] = resume(id, unpack(eventData))
+        end
       end
     end
     while _PRIORITYQUEUE[1] do
