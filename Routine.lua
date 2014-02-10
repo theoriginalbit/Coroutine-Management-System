@@ -98,7 +98,7 @@ function createRoutine(name,func)
   if type(func) == "thread" then
     local id = nextId()
     _NAMETOID[name] = id
-    _ROUTINES[id] = {id=id; name=name; paused=false; thread=func}
+    _ROUTINES[id] = {id=id; name=name; isPaused=false; thread=func}
     return id
   end
   return nil
@@ -128,11 +128,21 @@ function killRoutine(id)
 end
 
 function pauseRoutine(id)
-  -- Code here...
+  local co = _ROUTINES[resolveIdentifier(id)]
+  if coroutine.status(co.thread) ~= "dead" then
+    co.isPaused = true
+    return true
+  end
+  error("Cannot pause a dead coroutine", 2)
 end
 
 function resumeRoutine(id)
-  -- Code here...
+  local co = _ROUTINES[resolveIdentifier(id)]
+  if coroutine.status(co.thread) ~= "dead" then
+    co.isPaused = false
+    return true
+  end
+  error("Cannot resume a dead coroutine", 2)
 end
 
 function run()
