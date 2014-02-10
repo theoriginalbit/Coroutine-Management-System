@@ -46,6 +46,8 @@ do
   end
 end
 
+local _ROUTINES = {}
+local _NAMETOID = {}
 local _CURRENTROUTINEID = nil
 
 local function resolveIdentifier(ident)
@@ -64,17 +66,13 @@ local function resolveIdentifier(ident)
   error("Invalid identifier", 3)
 end
 
-
-local _ROUTINES = {}
-local _NAMETOID = {}
-
 local function resume(co, ...)
   local ok, param
   if coroutine.status(co.thread) ~= "dead" then
     _CURRENTROUTINEID = co.id
     ok, param = coroutine.resume(co.thread, ...)
     if not ok then
-      error(param, 3)
+      error(param, 0)
     end
   end
   if coroutine.status(co.thread) == "dead" then
@@ -86,7 +84,18 @@ local function resume(co, ...)
 end
 
 function routineStatus(id)
-  return coroutine.status(resolveIdentifier(id))
+  local co
+  if type(id) == "number" then
+    co = _ROUTINES[id]
+  elseif type(id) == "string" then
+    co = _ROUTINES[_NAMETOID[id]]
+  elseif type(id) == "thread" then
+    co = id
+  elseif type(ident) == "nil" then
+    co = _ROUTINES[_CURRENTROUTINEID]
+  end
+  co = type(co) == "table" and co.thread or co
+  return type(co) == "thread" and coroutine.status(co) or "dead"
 end
 
 function createCoroutine(name,func)
@@ -176,10 +185,10 @@ function run()
         if eventData[1] == "targeted_event" and eventData[2] == id then
           table.remove(eventData, 1) -- remove targeted_event
           table.remove(eventData, 1) -- remove targeted id
-          filters[id] = resume(id, unpack(eventData))
+          filters[id] = resume(routine, unpack(eventData))
           break
         elseif not filters[id] or filters[id] == eventData[1] or eventData[1] == "terminate" then
-          filters[id] = resume(id, unpack(eventData))
+          filters[id] = resume(routine, unpack(eventData))
         end
       end
     end
@@ -190,6 +199,9 @@ function run()
         resume(co, unpack(event.data))
       end
       table.remove(_PRIORITYQUEUE, 1)
+    end
+    if #_ROUTINES == 0 then
+      break
     end
     eventData = {coroutine.yield()}
   end

@@ -1,11 +1,30 @@
-os.loadAPI("routine")
+term.clear()
+term.setCursorPos(1, 1)
+
+local function loadAPI(path)
+  local name = string.match(fs.getName(path), "(%a+)%.?.-")
+  local env = setmetatable({}, { __index = _G })
+  local func, err = loadfile(path)
+  if not func then
+    return false, printError(err)
+  end
+  setfenv(func, env)
+  func()
+  local api = {}
+  for k,v in pairs(env) do
+    api[k] =  v
+  end
+  _G[name] = api
+  print(name)
+  return true
+end
+
+loadAPI("Coroutine-Management-System/Routine.lua")
 
 local oneId
 local twoId
 local threeId
 local fourId
-
-term.clear()
 
 local function one()
   local second = 0
@@ -17,37 +36,37 @@ local function one()
     term.setCursorPos(1,1)
     print("One has been running for "..second.." seconds")
 
-    if second == 5 and routine.routineStatus( threeId ) ~= "dead" then
+    if second == 5 and Routine.routineStatus( threeId ) ~= "dead" then
       term.setCursorPos(1, 6)
       print("killing three")
-      routine.killRoutine( threeId ) --# this will not invoke the callback
+      Routine.killCoroutine( threeId )
     end
     
-    if second == 7 and routine.routineStatus( twoId ) ~= "dead" then
-      routine.pauseRoutine( twoId )
+    if second == 7 and Routine.routineStatus( twoId ) ~= "dead" then
+      Routine.pauseCoroutine( twoId )
       term.setCursorPos(1, 7)
-      print("pausing two ... two status: "..routine.routineStatus( twoId ))
+      print("pausing two")
     end
 
-    if second == 9 and routine.routineStatus( twoId ) ~= "dead" then
-      routine.resumeRoutine( twoId )
+    if second == 10 and Routine.routineStatus( twoId ) ~= "dead" then
+      Routine.resumeCoroutine( twoId )
       term.setCursorPos(1, 8)
-      print("resuming two ... two status: "..routine.routineStatus( twoId ))
+      print("resuming two")
     end
 
-    if second == 11 and routine.routineStatus( twoId ) ~= "dead" then
+    if second == 11 and Routine.routineStatus( twoId ) ~= "dead" then
       term.setCursorPos(1, 9)
-      print("stopping two with callback")
-      routine.stopRoutine( twoId ) --# this will invoke the callback
+      print("stopping two")
+      Routine.stopCoroutine( twoId ) --# this will invoke the callback
     end
 
-    if second == 13 and routine.routineStatus( fourId ) ~= "dead" then
+    if second == 13 and Routine.routineStatus( fourId ) ~= "dead" then
       term.setCursorPos(1, 10)
-      print("stopping four with SIG_KILL")
-      routine.stopRoutine( fourId ) --# this will invoke the callback
+      print("stopping four (no stop, causes kill)")
+      Routine.stopCoroutine( fourId ) --# this will invoke the callback
     end
 
-    if second == 15 then
+    if second == 20 then
       term.setCursorPos(1, 11)
       print("ending self")
       break
@@ -77,11 +96,12 @@ local function two()
     if e[1] == "timer" and e[2] == time then
       time = os.startTimer(1)
       sec = sec + 1
+    elseif e[1] == "SIG_STOP" then
+      term.setCursorPos(1, 2)
+      print("two got a SIG_STOP")
+      break
     end
   end
-end
-
-local function twoCallback()
   term.setCursorPos(1,2)
   term.clearLine()
   term.setCursorPos(1,2)
@@ -103,15 +123,14 @@ local function three()
     if e[1] == "timer" and e[2] == time then
       time = os.startTimer(1)
       sec = sec + 1
+    elseif e[1] == "SIG_KILL" then
+      term.setCursorPos(1,3)
+      term.clearLine()
+      term.setCursorPos(1,3)
+      print("Three is dead")
+      break
     end
   end
-end
-
-local function threeCallback()
-  term.setCursorPos(1,3)
-  term.clearLine()
-  term.setCursorPos(1,3)
-  print("Three is dead")
 end
 
 local function four()
@@ -129,22 +148,28 @@ local function four()
     if e[1] == "timer" and e[2] == time then
       time = os.startTimer(1)
       sec = sec + 1
+    elseif e[1] == "SIG_STOP" then
+      term.setCursorPos(1,4)
+      term.clearLine()
+      term.setCursorPos(1,4)
+      print("Four has been told to stop")
+      sleep(2)
     elseif e[1] == "SIG_KILL" then
       term.setCursorPos(1,4)
       term.clearLine()
       term.setCursorPos(1,4)
-      print("Four has been told it will die :(")
+      print("Four was killed")
       --# we could use a return here if we wanted to, and it would stop the routine, or we can let the CMS do it.
     end
   end
 end
 
-oneId = routine.newRoutine( "one", one )
-twoId = routine.newRoutine( "two", two, twoCallback )
-threeId = routine.newRoutine( "three", three, threeCallback )
-fourId = routine.newRoutine( "four", four )
+oneId = Routine.createCoroutine( "one", one )
+twoId = Routine.createCoroutine( "two", two )
+threeId = Routine.createCoroutine( "three", three )
+fourId = Routine.createCoroutine( "four", four )
 
-routine.runRoutines()
+Routine.run()
 
 term.setCursorPos(1, 13)
 print("Done...")
