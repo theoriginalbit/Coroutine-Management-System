@@ -1,17 +1,21 @@
-Coroutine-Management-System
----------------------------
+Coroutine-Management-System (CMS)
+---------------------------------
 
-A better CMS for ComputerCraft that provides much more functionality than the Parallel API
+A better CMS for ComputerCraft that provides much more functionality than the [Parallel API](http://computercraft.info/wiki/Parallel_(API)) see the below features list for more details.
 
 Features
 --------
-- Ability to add new routines into the routine queue while running
-- Ability to kill/stop a routine
-- When stopping a routine they will have their callback function invoked, or get a "SIG_KILL" event if no callback is supplied on creation
-- Ability to queue events to a specific routine
-- Ability to get the routine so you could also control the life-cycle (if no ID is provided it will return the current routine)
-- Ability to queue event to a specific routine that are next in line to be unqueued (priority)
-- Ability to pause and resume routines
+- Add new routines into the queue while active (unlike the [Parallel API](http://computercraft.info/wiki/Parallel_(API)))
+- Check routine status
+- Stop a routine (raises SIG_STOP event)*
+- Kill a routine (raises SIG_KILL event)*
+- Pause a routine (raises SIG_PAUSE event)*
+- Resume a routine (raises SIG_RESUME event)*
+- Queue events targeted for specific routines
+- Queue events that jump the event queue
+- Ability for manual control of coroutine life-cycle
+
+* Events are notification of change in life-cycle only and does not allow you to prevent the change
 
 Author
 ------
