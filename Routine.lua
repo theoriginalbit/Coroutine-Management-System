@@ -1,5 +1,5 @@
 --[[
-  Coroutine-Management-System (CMS) v2.0 [Updated: 09 Feb 2014]
+  Coroutine-Management-System (CMS) v2.0 [Updated: 10 Feb 2014]
   
   Copyright © 2014 Joshua Asbury a.k.a. theoriginalbit [theoriginalbit@gmail.com]
 
@@ -24,15 +24,15 @@
   THE SOFTWARE.
 --]]
 
-local function safePairs( _t )
-  local tKeys = {}
-  for k,v in pairs( _t ) do
-    table.insert(tKeys, k)
+local function safePairs(t)
+  local keys = {}
+  for k,v in pairs(t) do
+    keys[#keys+1] = k
   end
-  local nAt = 0
+  local i = 0
   return function()
-    nAt = nAt + 1
-    return tKeys[nAt], _t[tKeys[nAt]]
+    i = i + 1
+    return keys[i], t[keys[i]]
   end
 end
 
@@ -46,20 +46,56 @@ do
   end
 end
 
-local function parseIdentifier( _ident )
-  if type(_ident) == "number" then
-    if _ROUTINES[_ident] then
-      return _ident
+local _CURRENTROUTINEID = nil
+
+local function resolveIdentifier(ident)
+  if type(ident) == "number" then
+    if _ROUTINES[ident] then
+      return ident
     end
-  elseif type(_ident) == "string" then
-    local id = _NAMETOID[_ident]
-    if _ROUTINES[id] then
+  elseif type(ident) == "string" then
+    local id = _NAMETOID[ident]
+    if id and _ROUTINES[id] then
       return id
     end
+  elseif type(ident) == "nil" then
+    return _CURRENTROUTINEID
   end
   error("Invalid identifier", 3)
 end
 
+
 local _ROUTINES = {}
 local _NAMETOID = {}
-local _CURRENTROUTINE = nil
+
+local function resume(...)
+  -- Code here...
+end
+
+function routineStatus(id)
+  -- Code here...
+end
+
+function createRoutine(name,func)
+  -- Code here...
+end
+
+function stopRoutine(id)
+  -- Code here...
+end
+
+function killRoutine(id)
+  -- Code here...
+end
+
+function pauseRoutine(id)
+  -- Code here...
+end
+
+function resumeRoutine(id)
+  -- Code here...
+end
+
+function run()
+  -- Code here...
+end
