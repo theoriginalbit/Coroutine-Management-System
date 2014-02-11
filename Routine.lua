@@ -177,11 +177,14 @@ function queuePriorityEvent(id, ...)
   table.insert(_PRIORITYQUEUE, {id=co.id; data={...}})
 end
 
-function run()
+local function run(min)
   local eventData = {}
   local filters = {}
 
   while true do
+    if #_ROUTINES <= min then
+      break
+    end
     for id, routine in safePairs(_ROUTINES) do
       if not routine.isPaused then
         if eventData[1] == "targeted_event" and eventData[2] == id then
@@ -202,9 +205,22 @@ function run()
       end
       table.remove(_PRIORITYQUEUE, 1)
     end
-    if #_ROUTINES == 0 then
-      break
-    end
     eventData = {coroutine.yield()}
   end
+end
+
+local function count(t)
+  local c = 0
+  for _ in pairs(t) do
+    c = c + 1
+  end
+  return c
+end
+
+function waitForAny()
+  run(count(_ROUTINES) - 1)
+end
+
+function waitForAll()
+  run(0)
 end
