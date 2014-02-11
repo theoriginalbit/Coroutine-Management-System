@@ -38,7 +38,7 @@ end
 
 local nextId
 do
-  local _NEXTID = 0
+  local _NEXTID = 1
   nextId = function()
     local temp = _NEXTID
     _NEXTID = _NEXTID + 1
@@ -186,7 +186,7 @@ local function run(min)
       break
     end
     for id, routine in safePairs(_ROUTINES) do
-      if not routine.isPaused then
+      if routine and not routine.isPaused then
         if eventData[1] == "targeted_event" and eventData[2] == id then
           table.remove(eventData, 1) -- remove targeted_event
           table.remove(eventData, 1) -- remove targeted id
